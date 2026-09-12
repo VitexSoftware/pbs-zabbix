@@ -1,3 +1,12 @@
+pbs-zabbix (0.1.1) trixie; urgency=medium
+
+  * discovery: only report VMs/CTs with backup activity in the last 45
+    days, so stale leftovers (a removed VM, or setup/test data from a
+    since-deleted datastore or user) do not linger as permanently-stale
+    Zabbix items/triggers
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Sat, 12 Sep 2026 12:17:46 +0200
+
 pbs-zabbix (0.1.0) trixie; urgency=medium
 
   * Initial release

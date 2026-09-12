@@ -9,6 +9,11 @@ import time
 
 TASKS_DIR = "/var/log/proxmox-backup/tasks"
 NO_BACKUP_SENTINEL = 999999999
+# Only discover VMs/CTs with backup activity within this window, so a VM
+# removed from the hypervisor (or leftover setup/test data from a
+# since-deleted datastore or user) does not linger as a permanently stale
+# Zabbix item forever.
+DISCOVERY_MAX_AGE_SECONDS = 45 * 86400
 
 
 def iter_backup_tasks():
@@ -58,7 +63,15 @@ def read_last_line(path):
 
 
 def cmd_discovery():
-    vmids = sorted({vmid for vmid, _starttime, _status in iter_backup_tasks()}, key=int)
+    cutoff = int(time.time()) - DISCOVERY_MAX_AGE_SECONDS
+    latest_by_vmid = {}
+    for vmid, starttime, _status in iter_backup_tasks():
+        if starttime > latest_by_vmid.get(vmid, -1):
+            latest_by_vmid[vmid] = starttime
+    vmids = sorted(
+        (vmid for vmid, starttime in latest_by_vmid.items() if starttime >= cutoff),
+        key=int,
+    )
     data = [{"{#VMID}": vmid} for vmid in vmids]
     print(json.dumps({"data": data}))
 
