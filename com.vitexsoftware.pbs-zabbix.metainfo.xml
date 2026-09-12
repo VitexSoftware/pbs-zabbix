@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>cz.vitexsoftware.pbs-zabbix</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>pbs-zabbix</name>
+  <summary>Zabbix monitoring for Proxmox Backup Server</summary>
+  <description>
+    <p>
+      pbs-zabbix monitors Proxmox Backup Server (PBS) datastores and alerts
+      when a scheduled backup did not complete successfully.
+    </p>
+    <p>
+      Using Zabbix low-level discovery, it enumerates every VM/CT that has
+      ever been backed up by reading directly from
+      <code>/var/log/proxmox-backup/tasks</code>, without calling the PBS
+      API and without requiring root privileges. For each discovered
+      VM/CT it exposes the age of the last successful backup and the last
+      recorded task status, so a Zabbix trigger can notify you as soon as
+      a backup job fails or simply never ran.
+    </p>
+  </description>
+  <icon type="stock">utilities-terminal</icon>
+  <provides>
+    <binary>pbs-zabbix-backup-check</binary>
+  </provides>
+  <url type="homepage">https://github.com/VitexSoftware/pbs-zabbix</url>
+</component>

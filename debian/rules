@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_test:
+	appstreamcli validate --pedantic --no-net \
+	    com.vitexsoftware.pbs-zabbix.metainfo.xml

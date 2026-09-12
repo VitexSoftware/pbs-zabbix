@@ -1,0 +1,48 @@
+.TH PBS-ZABBIX-BACKUP-CHECK 1 "" "pbs-zabbix" "User Commands"
+.SH NAME
+pbs\-zabbix\-backup\-check \- Zabbix UserParameter helper for Proxmox Backup Server task history
+.SH SYNOPSIS
+.B pbs-zabbix-backup-check
+discovery
+.br
+.B pbs-zabbix-backup-check
+age
+.I vmid
+.br
+.B pbs-zabbix-backup-check
+status
+.I vmid
+.SH DESCRIPTION
+Reads Proxmox Backup Server task logs from
+.I /var/log/proxmox-backup/tasks
+(world\-readable, no root or PBS API access required) and reports, per
+VM/CT, backup freshness for Zabbix low\-level discovery and items.
+.SH COMMANDS
+.TP
+.B discovery
+Print a Zabbix low\-level discovery JSON document listing
+.B {#VMID}
+for every VM/CT that has at least one recorded backup task.
+.TP
+.BI age " vmid"
+Print the number of seconds since the last successful
+.RI ( "TASK OK" )
+backup task for
+.IR vmid .
+Prints a large sentinel value (999999999) if no successful backup was
+ever recorded, so a staleness trigger fires immediately.
+.TP
+.BI status " vmid"
+Print the last line of the most recent backup task log for
+.IR vmid ,
+regardless of success or failure, for use as alert context.
+.SH EXIT STATUS
+Returns 0 on success, 1 on invalid arguments.
+.SH SEE ALSO
+Intended to be wired into
+.I /etc/zabbix/zabbix_agent2.d/pbs-backup.conf
+via
+.B UserParameter
+directives.
+.SH AUTHOR
+Vítězslav Dvořák <info@vitexsoftware.cz>

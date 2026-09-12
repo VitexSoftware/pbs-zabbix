@@ -1,0 +1,14 @@
+debian/.debhelper/
+debian/pbs-zabbix/
+debian/files
+debian/*.substvars
+debian/*.debhelper.log
+debian/debhelper-build-stamp
+obj-*/
+*.deb
+*.build
+*.buildinfo
+*.changes
+*.dsc
+*.tar.*
+__pycache__/

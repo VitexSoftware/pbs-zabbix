@@ -1,0 +1,27 @@
+Source: pbs-zabbix
+Section: net
+Priority: optional
+Maintainer: Vítězslav Dvořák <info@vitexsoftware.cz>
+Build-Depends: debhelper-compat (= 13), appstream
+Standards-Version: 4.6.2
+Homepage: https://github.com/VitexSoftware/pbs-zabbix
+Rules-Requires-Root: no
+
+Package: pbs-zabbix
+Architecture: all
+Depends: ${misc:Depends}, python3, zabbix-agent2 | zabbix-agent
+Description: Zabbix monitoring for Proxmox Backup Server
+ Monitors Proxmox Backup Server (PBS) datastores and alerts when a scheduled
+ backup did not complete successfully.
+ .
+ Uses Zabbix low-level discovery to enumerate every VM/CT that has ever been
+ backed up (read directly from /var/log/proxmox-backup/tasks, no PBS API
+ calls or root privileges required) and exposes, per VM/CT:
+  - age of the last successful (TASK OK) backup, in seconds
+  - the last recorded task status, for alert context
+ .
+ Pair the age item with a Zabbix trigger (e.g. using the
+ {$PBS.BACKUP.MAXAGE} macro, with per-VMID context overrides for
+ less-frequent backup schedules) to get notified as soon as a backup job
+ fails or simply never ran — for example because the network path between
+ the hypervisor and the PBS datastore was down.

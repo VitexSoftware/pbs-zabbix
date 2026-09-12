@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""Zabbix UserParameter helper for Proxmox Backup Server task history."""
+
+import glob
+import json
+import os
+import sys
+import time
+
+TASKS_DIR = "/var/log/proxmox-backup/tasks"
+NO_BACKUP_SENTINEL = 999999999
+
+
+def iter_backup_tasks():
+    """Yield (vmid, starttime, status) for every backup task log found."""
+    for path in glob.glob(os.path.join(TASKS_DIR, "*", "UPID:*")):
+        name = os.path.basename(path)
+        fields = name.split(":")
+        # UPID:<node>:<pid>:<pstart>:<task_id>:<starttime_hex>:<wtype>:<wid>:<user>:
+        if len(fields) < 9:
+            continue
+        starttime_hex, worker_type, worker_id = fields[5], fields[6], fields[7]
+        if worker_type != "backup":
+            continue
+        vmid = extract_vmid(worker_id)
+        if vmid is None:
+            continue
+        try:
+            starttime = int(starttime_hex, 16)
+        except ValueError:
+            continue
+        status = read_last_line(path)
+        yield vmid, starttime, status
+
+
+def extract_vmid(worker_id):
+    for sep in ("vm-", "vm/", "ct-", "ct/"):
+        idx = worker_id.rfind(sep)
+        if idx != -1:
+            digits = worker_id[idx + len(sep):]
+            digits = digits.split(":")[0]
+            if digits.isdigit():
+                return digits
+    return None
+
+
+def read_last_line(path):
+    try:
+        with open(path, "r", errors="replace") as fh:
+            lines = fh.readlines()
+    except OSError:
+        return ""
+    for line in reversed(lines):
+        line = line.strip()
+        if line:
+            return line
+    return ""
+
+
+def cmd_discovery():
+    vmids = sorted({vmid for vmid, _starttime, _status in iter_backup_tasks()}, key=int)
+    data = [{"{#VMID}": vmid} for vmid in vmids]
+    print(json.dumps({"data": data}))
+
+
+def latest_for_vmid(vmid):
+    latest = None
+    for task_vmid, starttime, status in iter_backup_tasks():
+        if task_vmid != vmid:
+            continue
+        if latest is None or starttime > latest[0]:
+            latest = (starttime, status)
+    return latest
+
+
+def cmd_age(vmid):
+    best_ok = None
+    for task_vmid, starttime, status in iter_backup_tasks():
+        if task_vmid != vmid or not status.endswith("TASK OK"):
+            continue
+        if best_ok is None or starttime > best_ok:
+            best_ok = starttime
+    if best_ok is None:
+        print(NO_BACKUP_SENTINEL)
+        return
+    print(max(0, int(time.time()) - best_ok))
+
+
+def cmd_status(vmid):
+    latest = latest_for_vmid(vmid)
+    print(latest[1] if latest else "NO BACKUP FOUND")
+
+
+def main(argv):
+    if len(argv) < 2:
+        print("usage: pbs-zabbix-backup-check <discovery|age|status> [vmid]", file=sys.stderr)
+        return 1
+    mode = argv[1]
+    if mode == "discovery":
+        cmd_discovery()
+    elif mode == "age" and len(argv) == 3:
+        cmd_age(argv[2])
+    elif mode == "status" and len(argv) == 3:
+        cmd_status(argv[2])
+    else:
+        print("usage: pbs-zabbix-backup-check <discovery|age|status> [vmid]", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

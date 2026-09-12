@@ -1,0 +1,8 @@
+pbs-zabbix (0.1.0) trixie; urgency=medium
+
+  * Initial release
+  * pbs-zabbix-backup-check: Zabbix LLD discovery, age[] and laststatus[]
+    UserParameters driven by Proxmox Backup Server task logs
+  * zabbix/pbs-backup.conf UserParameter definitions for zabbix-agent2
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Sat, 12 Sep 2026 11:20:12 +0200
