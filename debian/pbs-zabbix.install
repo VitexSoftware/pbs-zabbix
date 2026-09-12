@@ -1,3 +1,4 @@
 bin/* usr/share/pbs-zabbix/bin/
 zabbix/pbs-backup.conf etc/zabbix/zabbix_agent2.d/
 com.vitexsoftware.pbs-zabbix.metainfo.xml usr/share/metainfo/
+pbs-zabbix.svg usr/share/icons/hicolor/scalable/apps/

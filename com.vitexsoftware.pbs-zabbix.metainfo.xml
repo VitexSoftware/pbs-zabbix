@@ -20,7 +20,7 @@
       a backup job fails or simply never ran.
     </p>
   </description>
-  <icon type="stock">utilities-terminal</icon>
+  <icon type="stock">pbs-zabbix</icon>
   <provides>
     <binary>pbs-zabbix-backup-check</binary>
   </provides>

@@ -1,5 +1,7 @@
 # pbs-zabbix
 
+![pbs-zabbix icon](pbs-zabbix.svg)
+
 Zabbix monitoring for [Proxmox Backup Server](https://www.proxmox.com/en/proxmox-backup-server)
 (PBS). Alerts when a scheduled backup did not complete successfully — including
 the case where it never even started (e.g. the network path between the
