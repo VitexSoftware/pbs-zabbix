@@ -1,3 +1,17 @@
+pbs-zabbix (0.1.2) trixie; urgency=medium
+
+  * Ship an importable Zabbix 7.4 template (zabbix/template_pbs_backup.yaml)
+    bundling the discovery rule, item and trigger prototypes, so alerting
+    no longer depends on manually recreating them from the README
+  * Trigger prototype now also fires on nodata() for pbs.backup.age[*], not
+    just a stale last() value, so a backup that never even ran (PBS never
+    powered on, network down, agent unreachable) is caught instead of
+    silently freezing the item at its last known value
+  * README: document importing the template and recommend active checks
+    (ServerActive) on PBS hosts that are only powered on intermittently
+
+ -- Vítězslav Dvořák <info@vitexsoftware.cz>  Mon, 14 Sep 2026 17:26:42 +0200
+
 pbs-zabbix (0.1.1) trixie; urgency=medium
 
   * discovery: only report VMs/CTs with backup activity in the last 45

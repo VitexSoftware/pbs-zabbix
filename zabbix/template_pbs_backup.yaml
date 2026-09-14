@@ -1,0 +1,68 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: a1b2c3d4e5f647a6b7c8d9e0f1a2b3c4
+      name: Templates/Applications
+  templates:
+    - uuid: 7f3a1c2d4e5b4a6f8c9d0e1f2a3b4c5d
+      template: 'PBS Backup Monitoring'
+      name: 'PBS Backup Monitoring'
+      description: |
+        Zabbix monitoring for Proxmox Backup Server (pbs-zabbix).
+
+        Discovers every VM/CT that has recorded backup activity and alerts
+        when its last successful backup is older than {$PBS.BACKUP.MAXAGE},
+        OR when no new data has arrived for {$PBS.BACKUP.MAXAGE} at all.
+
+        The nodata() half of the trigger is what catches "backup never even
+        ran" (PBS did not power on, network path down, agent unreachable,
+        script broken, etc.) - a plain last() comparison alone freezes on
+        the last known value and never re-fires once polling stops. This
+        does NOT assume PBS is always on: a host that only wakes nightly to
+        run its backup and then shuts down is expected to report fresh data
+        at least once per {$PBS.BACKUP.MAXAGE} window, so it will not
+        false-alarm during its normal off periods.
+      groups:
+        - name: Templates/Applications
+      discovery_rules:
+        - uuid: 2b3c4d5e6f708192a3b4c5d6e7f80912
+          name: 'PBS backup discovery'
+          key: pbs.backup.discovery
+          delay: 1h
+          description: 'Discovers VMIDs with recorded backup task activity in the last 45 days.'
+          item_prototypes:
+            - uuid: 3c4d5e6f708192a3b4c5d6e7f8091a23
+              name: 'PBS backup age [{#VMID}]'
+              key: 'pbs.backup.age[{#VMID}]'
+              value_type: UNSIGNED
+              units: s
+              description: 'Seconds since the last successful (TASK OK) backup of {#VMID}.'
+              trigger_prototypes:
+                - uuid: 4d5e6f708192a3b4c5d6e7f8091a2b34
+                  expression: |-
+                    last(/PBS Backup Monitoring/pbs.backup.age[{#VMID}])>{$PBS.BACKUP.MAXAGE:"{#VMID}"}
+                    or nodata(/PBS Backup Monitoring/pbs.backup.age[{#VMID}],{$PBS.BACKUP.MAXAGE:"{#VMID}"})=1
+                  name: 'Backup for {#VMID} missing or stale on {HOST.NAME}'
+                  priority: AVERAGE
+                  description: |
+                    Either the last successful backup for {#VMID} is older
+                    than {$PBS.BACKUP.MAXAGE}, or no data has been received
+                    for {#VMID} at all in that window (PBS did not run,
+                    could not be reached, or the check failed) - both mean
+                    a fresh backup cannot be confirmed.
+            - uuid: 5e6f708192a3b4c5d6e7f8091a2b3c45
+              name: 'PBS last backup status [{#VMID}]'
+              key: 'pbs.backup.laststatus[{#VMID}]'
+              value_type: TEXT
+              description: 'Last recorded backup task line for {#VMID}, for alert context.'
+      macros:
+        - macro: '{$PBS.BACKUP.MAXAGE}'
+          value: '108000'
+          description: |
+            Max allowed age (seconds) of the last successful backup before
+            alerting, and also the nodata() window used to detect a missed
+            backup even when no new item data arrives at all. Default 30h
+            covers a nightly schedule with slack, including hosts that are
+            powered off most of the day. Override per-VMID with
+            {$PBS.BACKUP.MAXAGE:"<vmid>"} for less-frequent schedules
+            (e.g. weekly jobs).
